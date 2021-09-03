@@ -1,1 +1,1 @@
-Show preview information about links posted in the chat.
+Show preview information like title and description about links posted in chats.

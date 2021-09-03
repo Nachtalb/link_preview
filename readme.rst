@@ -1,8 +1,8 @@
 Link Preview
 ============
 
-A small plugin for `Nicotine+`_ to diplay previuew information
-about links sent to chats.
+A small plugin for `Nicotine+`_ to diplay preview information like
+title and description about links sent in chats.
 
 
 Installation
