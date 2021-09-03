@@ -1,1 +1,4 @@
 Show preview information like title and description about links posted in chats.
+
+You can use this regex to ignore youtube links in case you use the separate YouTube Preview plugin (without the quotes):
+"r/(?:www\.|m\.)?youtu(?:be\-nocookie\.com|\.be|be\.com)"
