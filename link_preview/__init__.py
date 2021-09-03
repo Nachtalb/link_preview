@@ -185,7 +185,11 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
         with urlopen(Request(url=url, headers={'User-Agent': choice(USER_AGENTS)}),
                      timeout=timeout) as conn:
             conn: HTTPResponse
-            return conn.read().decode('utf-8')
+            if conn.headers.get('Content-Type', '').startswith('text/'):
+                try:
+                    conn.read().decode('utf-8')
+                except UnicodeDecodeError:
+                    return
 
     def request_urls(self, urls):
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -193,6 +197,8 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
             for future in as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
-                    yield url, future.result()
+                    content = future.result()
+                    if content:
+                        yield url, future.result()
                 except Exception as e:
                     self.log(f'Could not load data for {url}: {e}')
