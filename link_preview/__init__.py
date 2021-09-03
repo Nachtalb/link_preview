@@ -3,6 +3,7 @@ from http.client import HTTPResponse
 from random import choice
 import re
 from string import Formatter
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from .base import BasePlugin
@@ -49,8 +50,9 @@ class MessageFormatter(Formatter):
 
 class Plugin(BasePlugin):
     settings = {
-        'template': ['* Title: {site_name} {title}', '* Description: {description}'],
         'color': 'Action',
+        'template': ['* Title: {site_name} {title}', '* Description: {description}'],
+        'ignore': [],
     }
     metasettings = {
         'color': {
@@ -64,18 +66,35 @@ Available placeholders: {title}, {description}, {site_name}, {url}
 ''',
             'type': 'list string'
         },
+        'ignore': {
+            'description': '''Domains to ignore
+This may come in useful eg. when you have the YouTube Link Preview plugin active that has more
+detailed information about youtube videos.
+
+Prefix any regex with r/.
+
+You can use this regex if you use the YouTube plugin (see plugin description to copy it):
+"r/(?:www\\.|m\\.)?youtu(?:be\\-nocookie\\.com|\\.be|be\\.com)"
+''',  # noqa
+            'type': 'list string'
+        },
     }
     url_reg = re.compile(r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)')  # noqa
     title_temp = '* Title: {title}'
     desc_temp = '* Description: {description}'
     formatter = MessageFormatter()
 
+    def init(self):
+        super().init()
+        self.ignored_pure = self.ignored_reg = []
+        self.parse_ignored()
+
     def incoming_chat_notification(self, user: str, line: str, room: str = None):
         if (self.frame.np.network_filter.is_user_ignored(user) or
                 self.frame.np.network_filter.is_user_ip_ignored(user)):
             return
 
-        urls = self.url_reg.findall(line)
+        urls = self.find_urls(line)
         parser = InfoParser()
         msg_type = self.settings['color'].lower()
         for url, data in self.request_urls(urls):
@@ -89,6 +108,35 @@ Available placeholders: {title}, {description}, {site_name}, {url}
                     self.echo_public(room, msg, msg_type)
                 else:
                     self.echo_private(user, msg, msg_type)
+
+    def settings_changed(self, before, after, change):
+        if 'ignore' in change['after']:
+            self.parse_ignored()
+
+    def parse_ignored(self):
+        self.ignored_pure = set(filter(lambda s: not s.startswith('r/'), self.settings['ignore']))  # type: ignore
+        self.ignored_reg = []
+        errors = []
+        for reg in set(self.settings['ignore']) - self.ignored_pure:
+            reg = reg[2:]
+            try:
+                self.ignored_reg.append(re.compile(reg))
+            except re.error as e:
+                errors.append(f'"{reg}": {e}')
+
+        if errors:
+            error_msg = 'Could not parse the following regex patterns:\n- ' + '\n- '.join(errors)
+            self.error_window(error_msg)
+
+    def find_urls(self, string):
+        urls = self.url_reg.findall(string)
+        for url in urls:
+            parsed = urlparse(url)
+            if (not parsed.netloc or
+                    parsed.netloc in self.ignored_pure or
+                    any(map(lambda r: re.match(r, parsed.netloc), self.ignored_reg))):
+                continue
+            yield url
 
     def msg(self, data: dict[str, str]):
         msg = []
@@ -109,7 +157,7 @@ Available placeholders: {title}, {description}, {site_name}, {url}
             conn: HTTPResponse
             return conn.read().decode('utf-8')
 
-    def request_urls(self, urls: list[str]):
+    def request_urls(self, urls):
         with ThreadPoolExecutor(max_workers=4) as executor:
             future_to_url = {executor.submit(self.load_url, url, 10): url for url in urls}
             for future in as_completed(future_to_url):

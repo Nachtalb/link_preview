@@ -223,6 +223,12 @@ Check for updates on start and periodically''',
 
         log.add(f'{self.__name__}: {msg}', msg_args, level)
 
+    def error_window(self, *msg, msg_args=[]):
+        self.log(*msg, msg_args=msg_args, level='important_error')
+
+    def info_window(self, *msg, msg_args=[]):
+        self.log(*msg, msg_args=msg_args, level='important_info')
+
     @property
     def update_url(self):
         repo = CONFIG.get('Repository')
