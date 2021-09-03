@@ -1,6 +1,6 @@
-Version="1.0.0"
+Version="1.0.1.dev0"
 Authors=['Nachtalb']
-Name="Link Preview"
+Name="Link Preview DEV"
 Description="Show preview information like title and description about links posted in chats."
 Repository="Nachtalb/link_preview"
-Prefix="lp"
+Prefix="dlp"
