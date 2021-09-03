@@ -49,12 +49,12 @@ class MessageFormatter(Formatter):
 
 class Plugin(BasePlugin):
     settings = {
-        'template': ['* Title: {title}', '* Description: {description}'],
+        'template': ['* Title: {site_name} {title}', '* Description: {description}'],
         'color': 'Action',
     }
     metasettings = {
         'color': {
-            'description': 'Message color:',
+            'description': 'Message Colour',
             'type': 'dropdown',
             'options': ('Remote', 'Local', 'Action', 'Hilite'),
         },
