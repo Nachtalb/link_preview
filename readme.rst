@@ -62,5 +62,5 @@ License
 `MIT`_
 
 .. _Nicotine+: https://nicotine-plus.github.io/nicotine-plus/
-.. _release: https://github.com/Nachtalb/link_preview/releases/latest
+.. _release: https://github.com/Nachtalb/link_preview/releases
 .. _MIT: https://github.com/Nachtalb/link_preview/blob/master/LICENSE
