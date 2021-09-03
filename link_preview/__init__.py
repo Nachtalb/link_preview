@@ -53,6 +53,7 @@ class Plugin(BasePlugin):
         'color': 'Action',
         'template': ['* Title: {site_name} {title}', '* Description: {description}'],
         'ignore': [],
+        'whitelist': [],
     }
     metasettings = {
         'color': {
@@ -67,7 +68,7 @@ Available placeholders: {title}, {description}, {site_name}, {url}
             'type': 'list string'
         },
         'ignore': {
-            'description': '''Domains to ignore
+            'description': '''Domain Blacklist
 This may come in useful eg. when you have the YouTube Link Preview plugin active that has more
 detailed information about youtube videos.
 
@@ -75,6 +76,12 @@ Prefix any regex with r/.
 
 You can use this regex if you use the YouTube plugin (see plugin description to copy it):
 "r/(?:www\\.|m\\.)?youtu(?:be\\-nocookie\\.com|\\.be|be\\.com)"
+''',  # noqa
+            'type': 'list string'
+        },
+        'whitelist': {
+            'description': '''Domain Whitelist
+Works the same as the blacklist but the other way around. Blacklist will be ignored.
 ''',  # noqa
             'type': 'list string'
         },
@@ -87,6 +94,7 @@ You can use this regex if you use the YouTube plugin (see plugin description to 
     def init(self):
         super().init()
         self.ignored_pure = self.ignored_reg = []
+        self.whitelist_pure = self.whitelist_reg = []
         self.parse_ignored()
 
     def incoming_chat_notification(self, user: str, line: str, room: str = None):
@@ -110,19 +118,31 @@ You can use this regex if you use the YouTube plugin (see plugin description to 
                     self.echo_private(user, msg, msg_type)
 
     def settings_changed(self, before, after, change):
-        if 'ignore' in change['after']:
+        if 'ignore' in change['after'] or 'whitelist' in change['after']:
             self.parse_ignored()
 
     def parse_ignored(self):
         self.ignored_pure = set(filter(lambda s: not s.startswith('r/'), self.settings['ignore']))  # type: ignore
         self.ignored_reg = []
+
+        self.whitelist_pure = set(filter(lambda s: not s.startswith('r/'), self.settings['whitelist']))  # type: ignore
+        self.whitelist_reg = []
+
         errors = []
-        for reg in set(self.settings['ignore']) - self.ignored_pure:
+        for reg in set(self.settings['whitelist']) - self.whitelist_pure:
             reg = reg[2:]
             try:
-                self.ignored_reg.append(re.compile(reg))
+                self.whitelist_reg.append(re.compile(reg))
             except re.error as e:
                 errors.append(f'"{reg}": {e}')
+
+        if not self.whitelist_pure and not self.whitelist_reg:
+            for reg in set(self.settings['ignore']) - self.ignored_pure:
+                reg = reg[2:]
+                try:
+                    self.ignored_reg.append(re.compile(reg))
+                except re.error as e:
+                    errors.append(f'"{reg}": {e}')
 
         if errors:
             error_msg = 'Could not parse the following regex patterns:\n- ' + '\n- '.join(errors)
@@ -135,6 +155,11 @@ You can use this regex if you use the YouTube plugin (see plugin description to 
             if (not parsed.netloc or
                     parsed.netloc in self.ignored_pure or
                     any(map(lambda r: re.match(r, parsed.netloc), self.ignored_reg))):
+                continue
+
+            if ((self.whitelist_reg or self.whitelist_pure) and
+                    (parsed.netloc not in self.whitelist_pure or
+                     not any(map(lambda r: re.match(r, parsed.netloc), self.whitelist_reg)))):
                 continue
             yield url
 

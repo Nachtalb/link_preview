@@ -40,13 +40,15 @@ Settings
 |                     | - ``{description}``: Eg. "This is some video description on youtube"                    |                                                                      |
 |                     | - ``{url}``: The URL which was sent in the chat message                                 |                                                                      |
 +---------------------+-----------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| Domains to ignore   | This may come in useful eg. when you have the YouTube Link Preview plugin active that   | ``[]``                                                               |
+| Domain Blacklist    | This may come in useful eg. when you have the YouTube Link Preview plugin active that   | ``[]``                                                               |
 |                     | has more detailed information about youtube videos.                                     |                                                                      |
 |                     |                                                                                         |                                                                      |
 |                     | Prefix any regex with ``r/``.                                                           |                                                                      |
 |                     |                                                                                         |                                                                      |
 |                     | You can use this regex if you use the YouTube plugin (see plugin description to copy    |                                                                      |
 |                     | it): ``r/(?:www\.|m\.)?youtu(?:be\-nocookie\.com|\.be|be\.com)``                        |                                                                      |
++---------------------+-----------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Domain Whitelist    | Works the same as the blacklist but the other way around. Blacklist will be ignored.    | ``[]``                                                               |
 +---------------------+-----------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 
