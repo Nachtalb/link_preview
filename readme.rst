@@ -20,6 +20,7 @@ Usage
 -----
 
 - ``/lp-update`` manually check for updates.
+- ``/lp-reload`` reload the plugin.
 
 
 Settings
