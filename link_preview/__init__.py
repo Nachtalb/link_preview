@@ -140,6 +140,11 @@ You can use this regex if you use the YouTube plugin (see plugin description to 
 
     def msg(self, data: dict[str, str]):
         msg = []
+
+        if 'site_name' in data and 'title' in data and data['title'].startswith(data['site_name']):
+            # Often titles already include the sitename at the start
+            data['site_name'] = ''
+
         for line in self.settings['template']:
             if any(map(lambda k: '{%s}' % k in line, data.keys())):
                 msg.append(self.formatter.format(line, **data).replace('\n', ' '))
