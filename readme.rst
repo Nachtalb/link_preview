@@ -16,8 +16,8 @@ Now you can enable the *Link Preview* plugin in the previously
 opened plugin settings.
 
 
-Usage
------
+Commands
+--------
 
 - ``/lp-update`` manually check for updates.
 - ``/lp-reload`` reload the plugin.
