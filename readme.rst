@@ -34,6 +34,7 @@ Settings
 | Message Colour      | How the message should be coloured                                                      | Action                                                               |
 +---------------------+-----------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | Link Preview        | Template for how to display the information. Available placeholders are:                | ``['* Title: {site_name} {title}', '* Description: {description}']`` |
+|                     |                                                                                         |                                                                      |
 |                     | - ``{site_name}``: Eg. YouTube, Google & Twitter                                        |                                                                      |
 |                     | - ``{title}``: Eg. "Some video title foo bar", "Your search query on google"            |                                                                      |
 |                     | - ``{description}``: Eg. "This is some video description on youtube"                    |                                                                      |
