@@ -158,8 +158,8 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
                 continue
 
             if ((self.whitelist_reg or self.whitelist_pure) and
-                    (parsed.netloc not in self.whitelist_pure or
-                     not any(map(lambda r: re.match(r, parsed.netloc), self.whitelist_reg)))):
+                    parsed.netloc not in self.whitelist_pure and
+                    not any(map(lambda r: re.match(r, parsed.netloc), self.whitelist_reg))):
                 continue
             yield url
 
@@ -187,9 +187,9 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
             conn: HTTPResponse
             if conn.headers.get('Content-Type', '').startswith('text/'):
                 try:
-                    conn.read().decode('utf-8')
+                    return conn.read().decode('utf-8')
                 except UnicodeDecodeError:
-                    return
+                    pass
 
     def request_urls(self, urls):
         with ThreadPoolExecutor(max_workers=4) as executor:
