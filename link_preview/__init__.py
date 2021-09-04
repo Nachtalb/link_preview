@@ -1,43 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from http.client import HTTPResponse
-from random import choice
 import re
 from string import Formatter
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from .adapters import matching_adapter
 
 from .base import BasePlugin
-from .html import HTMLParser
-
-
-USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',  # noqa
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393',  # noqa
-]
-
-
-class InfoParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.data = {}
-        self._title_match = False
-
-    def handle_starttag(self, tag, attributes):
-        attrs = dict(attributes)
-        if tag == 'meta' and attrs.get('property', '').startswith(('og:', 'twitter:')):
-            prop = attrs['property'].split(':', 1)[1]
-            if (':' not in prop and
-                    prop not in ('image', 'video') and
-                    (content := attrs.get('content'))):
-                self.data[prop] = content
-        if 'title' not in self.data and tag == 'title':
-            self._title_match = True
-
-    def handle_data(self, data):
-        if self._title_match:
-            self.data['title'] = data
-            self._title_match = False
 
 
 class MessageFormatter(Formatter):
@@ -103,15 +70,9 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
             return
 
         urls = self.find_urls(line)
-        parser = InfoParser()
         msg_type = self.settings['color'].lower()
-        for url, data in self.request_urls(urls):
-            parser.reset()
-            parser.feed(data)
-            if 'url' not in parser.data:
-                parser.data['url'] = url
-
-            if msg := self.msg(parser.data):
+        for data in self.request_urls(urls):
+            if msg := self.msg(data):
                 if room:
                     self.echo_public(room, msg, msg_type)
                 else:
@@ -181,24 +142,18 @@ Works the same as the blacklist but the other way around. Blacklist will be igno
     def incoming_private_chat_notification(self, user: str, line: str):
         self.incoming_chat_notification(user, line)
 
-    def load_url(self, url: str, timeout: int):
-        with urlopen(Request(url=url, headers={'User-Agent': choice(USER_AGENTS)}),
-                     timeout=timeout) as conn:
-            conn: HTTPResponse
-            if conn.headers.get('Content-Type', '').startswith('text/'):
-                try:
-                    return conn.read().decode('utf-8')
-                except UnicodeDecodeError:
-                    pass
+    def get_url_info(self, url):
+        for gatherer in matching_adapter(url):
+            if data := gatherer.get_data():
+                return data
 
     def request_urls(self, urls):
         with ThreadPoolExecutor(max_workers=4) as executor:
-            future_to_url = {executor.submit(self.load_url, url, 10): url for url in urls}
+            future_to_url = {executor.submit(self.get_url_info, url): url for url in urls}
             for future in as_completed(future_to_url):
-                url = future_to_url[future]
                 try:
                     content = future.result()
                     if content:
-                        yield url, future.result()
+                        yield content
                 except Exception as e:
-                    self.log(f'Could not load data for {url}: {e}')
+                    self.log(f'Could not load data for {future_to_url[future]}: {e}')
