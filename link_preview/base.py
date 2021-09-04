@@ -5,7 +5,6 @@ import re
 import sys
 from threading import Event, Thread
 from time import sleep, time
-from urllib import request
 
 from pynicotine.pluginsystem import returncode
 from pynicotine.pluginsystem import BasePlugin as NBasePlugin
@@ -240,9 +239,10 @@ Check for updates on start and periodically''',
     def check_update(self, force=False):
         try:
             repo = self.plugin_config.get('repository')
-            if not repo:
+            if not repo and force:
+                self.log('This update endpoint defined for this plugin')
                 return
-            if not force and 'dev' in __version__ or not self.settings['check_update']:
+            if not force and repo and 'dev' in __version__ or not self.settings['check_update']:
                 self.update_version = None
                 return
 
