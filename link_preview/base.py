@@ -10,7 +10,7 @@ from urllib import request
 from pynicotine.pluginsystem import returncode
 from pynicotine.pluginsystem import BasePlugin as NBasePlugin
 
-from .utils import BASE_PATH, command, log
+from .utils import BASE_PATH, command, log, get
 
 
 config_file = BASE_PATH / 'PLUGININFO'
@@ -237,19 +237,20 @@ Check for updates on start and periodically''',
         return f'https://github.com/{repo}/releases/tag/{self.update_version}'
 
     @command
-    def check_update(self):
+    def check_update(self, force=False):
         try:
             repo = self.plugin_config.get('repository')
-            if 'dev' in __version__ or not repo or not self.settings['check_update']:
+            if not repo:
+                return
+            if not force and 'dev' in __version__ or not self.settings['check_update']:
                 self.update_version = None
                 return
 
             current_version = Version.parse(__version__)
 
-            with request.urlopen(f'https://api.github.com/repos/{repo}/releases') as response:
-                releases = json.load(response)
+            with get(f'https://api.github.com/repos/{repo}/releases') as response:
                 msg = ''
-                for release in releases:
+                for release in response.json:
                     if release['draft'] or release['prerelease'] or Version.parse(release['tag_name'][1:]) <= current_version:  # noqa
                         continue
                     if not msg:

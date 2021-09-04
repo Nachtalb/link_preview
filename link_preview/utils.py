@@ -1,5 +1,4 @@
 from functools import wraps
-from functools import partial
 from http.client import HTTPResponse
 import inspect
 import json
@@ -19,21 +18,46 @@ USER_AGENTS = [
 ]
 
 
+def _parse_according_to_spec(spec, value):
+    if isinstance(spec.annotation, bool) or isinstance(spec.default, bool):
+        return False if value.lower() == 'false' else True
+    for t in [int, float]:
+        if isinstance(spec.annotation, t) or isinstance(spec.default, t):
+            try:
+                return t(value)
+            except Exception:
+                log(f'Expected type {t} for argument {spec.name}')
+                return
+
+
 def command(func):
     @wraps(func)
     def wrapper(self, initiator=None, argstring=None, *_args, **_kwargs):
         if self == initiator:
             initiator = argstring
             argstring, _args = _args[0], _args[1:]
-        argspec = inspect.signature(func)
+        parameters = inspect.signature(func).parameters
         command_args = list(map(str2num, filter(None, map(str.strip, (argstring or '').split()))))
         extra_args = []
 
-        if 'initiator' in argspec.parameters and 'initiator' not in _kwargs and initiator is not None:  # noqa
+        if 'initiator' in parameters and 'initiator' not in _kwargs and initiator is not None:  # noqa
             extra_args.append(initiator)
-        if 'args' in argspec.parameters and 'args' not in _kwargs and command_args:
+        if 'args' in parameters and 'args' not in _kwargs and command_args:
             extra_args.append(command_args)
-
+        elif command_args:
+            for arg in command_args:
+                if not isinstance(arg, str):
+                    continue
+                elif '=' in arg:
+                    key, value = arg.split('=')  # type: ignore
+                    key = key.strip('-')
+                    if key and value and key in parameters:
+                        value = _parse_according_to_spec(parameters[key], value)
+                        if value is None:
+                            continue
+                        _kwargs[key] = value
+                elif arg in parameters and (value := _parse_according_to_spec(parameters[arg], arg)) is not None:
+                    _kwargs[arg] = value
         return func(self, *extra_args, *_args, **_kwargs)
     return wrapper
 
@@ -69,6 +93,13 @@ class Response:
         self.encoding = self.headers.get_content_charset()
         self.content
 
+    def __enter__(self):
+        self._wrapped_obj.__enter__()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        return self._wrapped_obj.__exit__(*args, **kwargs)
+
     def __getattr__(self, attr):
         if attr in self.__dict__:
             return getattr(self, attr)
@@ -103,5 +134,5 @@ def get(url, headers={}, data=None, timeout=30):
     if 'User-Agent' not in headers:
         headers['User-Agent'] = choice(USER_AGENTS)
 
-    with urlopen(Request(url=url, data=data, headers=headers), timeout=timeout) as resp:
-        return Response(resp)
+    response = urlopen(Request(url=url, data=data, headers=headers), timeout=timeout)
+    return Response(response)
