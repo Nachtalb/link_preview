@@ -4,6 +4,7 @@ Link Preview
 A small plugin for `Nicotine+`_ to display preview information like
 title and description about links sent in chats.
 
+Plugin created with `Nicotine+ Plugin Template`_ made by `Nachtalb`_.
 
 Installation
 ------------
@@ -68,5 +69,7 @@ License
 `MIT`_
 
 .. _Nicotine+: https://nicotine-plus.github.io/nicotine-plus/
+.. _Nicotine+ Plugin Template: https://github.com/Nachtalb/nicotine_plus_plugin_template
+.. _Nachtalb: https://github.com/Nachtalb
 .. _release: https://github.com/Nachtalb/link_preview/releases
 .. _MIT: https://github.com/Nachtalb/link_preview/blob/master/LICENSE
