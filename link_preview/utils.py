@@ -1,11 +1,14 @@
 from functools import wraps
-import inspect
-from pathlib import Path
-from urllib.request import Request, urlopen
-import json
-from random import choice
+from functools import partial
 from http.client import HTTPResponse
+import inspect
+import json
+from pathlib import Path
+from random import choice
 from typing import Union
+from urllib.request import Request, urlopen
+
+from pynicotine.logfacility import log as nlog
 
 BASE_PATH = Path(__file__).parent.parent.absolute()
 
@@ -43,6 +46,16 @@ def str2num(string):
     except ValueError:
         pass
     return string
+
+
+def log(*msg, msg_args=[], level=None, prefix=None):
+    if len(msg) == 1:
+        msg = msg[0]
+    else:
+        msg = ', '.join(map(str, msg))
+
+    msg = (prefix if prefix else '') + f'{msg}'
+    nlog.add(msg, msg_args, level)
 
 
 class Response:
