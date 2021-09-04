@@ -1,4 +1,4 @@
-Version="1.2.2"
+Version="1.2.3.dev0"
 Authors=['Nachtalb']
 Name="Link Preview"
 Description="Show preview information like title and description about links posted in chats.\n\nYou can use this regex to ignore youtube links in case you use the separate YouTube Preview plugin (without the quotes):\n\"r/(?:www\.|m\.)?youtu(?:be\-nocookie\.com|\.be|be\.com)\"\n\nAuthor: https://github.com/Nachtalb\nSource: https://github.com/Nachtalb/link_preview\nReleases: https://github.com/Nachtalb/link_preview/releases"
