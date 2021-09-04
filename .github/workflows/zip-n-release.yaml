@@ -1,0 +1,25 @@
+name: zip-n-release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.GITHUB_REF }}
+          path: link_preview
+      - name: zip
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: 'link_preview.zip'
+          path: 'link_preview'
+          exclusions: 'link_preview/*.git* link_preview/.gitgub link_preview/.gitignore link_preview/.flake8 link_preview/DESCRIPTION link_preview/releaser'
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: 'link_preview.zip'
+          draft: true
