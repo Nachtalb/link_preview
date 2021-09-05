@@ -1,0 +1,3 @@
+[submodule "link_preview/core"]
+	path = link_preview/core
+	url = git@github.com:Nachtalb/np_plugin.core.git

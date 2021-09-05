@@ -12,12 +12,21 @@ jobs:
         with:
           ref: ${{ env.GITHUB_REF }}
           path: link_preview
+          submodules: recursive
       - name: zip
         uses: thedoctor0/zip-release@master
         with:
           filename: 'link_preview.zip'
           path: 'link_preview'
-          exclusions: 'link_preview/*.git* link_preview/.gitgub link_preview/.gitignore link_preview/.flake8 link_preview/DESCRIPTION link_preview/releaser'
+          exclusions: >-
+            link_preview/*.git*
+            link_preview/.gitgub
+            link_preview/.gitignore
+            link_preview/.flake8
+            link_preview/DESCRIPTION
+            link_preview/releaser
+            link_preview/_config.yml
+            link_preview/link_preview/core/*.git*
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

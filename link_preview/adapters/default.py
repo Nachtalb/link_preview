@@ -1,4 +1,4 @@
-from ..utils import get
+from ..core.utils import get
 from ..html import HTMLParser
 
 

@@ -4,7 +4,7 @@ from string import Formatter
 from urllib.parse import urlparse
 from .adapters import matching_adapter
 
-from .base import BasePlugin
+from .core.base import BasePlugin
 
 
 class MessageFormatter(Formatter):
